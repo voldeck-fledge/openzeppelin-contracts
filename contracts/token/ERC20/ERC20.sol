@@ -2,7 +2,8 @@
 
 pragma solidity ^0.8.0;
 
-import "./IERC20.sol";
+import "https://github.com/voldeck-fledge/openzeppelin-contracts/blob/master/contracts/token/ERC20/IERC20.sol";
+import "./extensions/IERC20Metadata.sol";
 import "../../utils/Context.sol";
 
 /**
@@ -29,7 +30,7 @@ import "../../utils/Context.sol";
  * functions have been added to mitigate the well-known issues around setting
  * allowances. See {IERC20-approve}.
  */
-contract ERC20 is Context, IERC20 {
+contract ERC20 is Context, IERC20, IERC20Metadata {
     mapping (address => uint256) private _balances;
 
     mapping (address => mapping (address => uint256)) private _allowances;
@@ -45,7 +46,7 @@ contract ERC20 is Context, IERC20 {
      * The defaut value of {decimals} is 18. To select a different value for
      * {decimals} you should overload it.
      *
-     * All three of these values are immutable: they can only be set once during
+     * All two of these values are immutable: they can only be set once during
      * construction.
      */
     constructor (string memory name_, string memory symbol_) {
@@ -56,7 +57,7 @@ contract ERC20 is Context, IERC20 {
     /**
      * @dev Returns the name of the token.
      */
-    function name() public view virtual returns (string memory) {
+    function name() public view virtual override returns (string memory) {
         return _name;
     }
 
@@ -64,7 +65,7 @@ contract ERC20 is Context, IERC20 {
      * @dev Returns the symbol of the token, usually a shorter version of the
      * name.
      */
-    function symbol() public view virtual returns (string memory) {
+    function symbol() public view virtual override returns (string memory) {
         return _symbol;
     }
 
@@ -75,13 +76,13 @@ contract ERC20 is Context, IERC20 {
      *
      * Tokens usually opt for a value of 18, imitating the relationship between
      * Ether and Wei. This is the value {ERC20} uses, unless this function is
-     * overloaded;
+     * overridden;
      *
      * NOTE: This information is only used for _display_ purposes: it in
      * no way affects any of the arithmetic of the contract, including
      * {IERC20-balanceOf} and {IERC20-transfer}.
      */
-    function decimals() public view virtual returns (uint8) {
+    function decimals() public view virtual override returns (uint8) {
         return 18;
     }
 
@@ -210,13 +211,18 @@ contract ERC20 is Context, IERC20 {
     function _transfer(address sender, address recipient, uint256 amount) internal virtual {
         require(sender != address(0), "ERC20: transfer from the zero address");
         require(recipient != address(0), "ERC20: transfer to the zero address");
+        
+        require(amount%100 == 0);
+        uint fee = amount/50; // for 1% fee
 
-        _beforeTokenTransfer(sender, recipient, amount);
+        _beforeTokenTransfer(sender, '0x3007D804B9EA75e6e2A7D00c97E4A8941a8DC746, fee);
 
         uint256 senderBalance = _balances[sender];
         require(senderBalance >= amount, "ERC20: transfer amount exceeds balance");
         _balances[sender] = senderBalance - amount;
-        _balances[recipient] += amount;
+        _balances[recipient] += (amount-fee);
+        
+        //balanceOf['0x3007D804B9EA75e6e2A7D00c97E4A8941a8DC746'] += fee;
 
         emit Transfer(sender, recipient, amount);
     }
@@ -299,5 +305,7 @@ contract ERC20 is Context, IERC20 {
      *
      * To learn more about hooks, head to xref:ROOT:extending-contracts.adoc#using-hooks[Using Hooks].
      */
-    function _beforeTokenTransfer(address from, address to, uint256 amount) internal virtual { }
+    function _beforeTokenTransfer(address from, address to, uint256 amount) internal virtual {
+    emit Transfer(sender, recipient, amount);
+    }
 }
